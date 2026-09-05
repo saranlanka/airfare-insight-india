@@ -178,10 +178,10 @@ export function buildSeries(seedKey: string, months = 24, baseFare = 5200): Seri
   for (let i = 0; i < months; i++) {
     const m = (i + 1) % 12;
     const drift = 0.35 + rnd() * 0.5;
-    const season = SEASONALITY[m] * 0.45;
+    const season = SEASONALITY[m]! * 0.45;
     idx = Math.max(72, idx + drift + season * 0.35 + (rnd() - 0.5) * 3.4);
     out.push({
-      label: `${MONTHS[m]} ${25 + Math.floor((i + 1) / 12)}`,
+      label: `${MONTHS[m]!} ${25 + Math.floor((i + 1) / 12)}`,
       index: Math.round(idx * 10) / 10,
       fare: Math.round((baseFare * idx) / 100 / 10) * 10,
       cpiTransport: Math.round((100 + i * 0.42 + (rnd() - 0.5) * 1.1) * 10) / 10,
@@ -192,16 +192,16 @@ export function buildSeries(seedKey: string, months = 24, baseFare = 5200): Seri
 
 export function buildForecast(series: SeriesPoint[], horizon = 6): SeriesPoint[] {
   const rnd = seeded(hashString(series.map((s) => s.index).join("|")));
-  const last = series[series.length - 1];
+  const last = series[series.length - 1]!;
   const slope =
-    (series[series.length - 1].index - series[series.length - 7].index) / 6 || 0.4;
+    (series[series.length - 1]!.index - series[series.length - 7]!.index) / 6 || 0.4;
   const out: SeriesPoint[] = [];
   let idx = last.index;
   for (let i = 1; i <= horizon; i++) {
     const m = (series.length + i) % 12;
-    idx = idx + slope * 0.8 + SEASONALITY[m] * 0.22 + (rnd() - 0.5) * 1.2;
+    idx = idx + slope * 0.8 + SEASONALITY[m]! * 0.22 + (rnd() - 0.5) * 1.2;
     out.push({
-      label: `${MONTHS[m]} ${25 + Math.floor((series.length + i) / 12)}`,
+      label: `${MONTHS[m]!} ${25 + Math.floor((series.length + i) / 12)}`,
       index: Math.round(idx * 10) / 10,
       forecast: Math.round(idx * 10) / 10,
       fare: Math.round((last.fare * idx) / last.index / 10) * 10,
@@ -252,13 +252,13 @@ export function cabinSpread(avgFare: number): { cabin: Cabin; fare: number }[] {
 export const NATIONAL_SERIES = buildSeries("national-index", 24, 5400);
 export const NATIONAL_FORECAST = buildForecast(NATIONAL_SERIES, 6);
 
-export const NATIONAL_INDEX = NATIONAL_SERIES[NATIONAL_SERIES.length - 1].index;
+export const NATIONAL_INDEX = NATIONAL_SERIES[NATIONAL_SERIES.length - 1]!.index;
 export const NATIONAL_MOM =
   Math.round(
-    (NATIONAL_INDEX - NATIONAL_SERIES[NATIONAL_SERIES.length - 2].index) * 10,
+    (NATIONAL_INDEX - NATIONAL_SERIES[NATIONAL_SERIES.length - 2]!.index) * 10,
   ) / 10;
 export const NATIONAL_YOY =
-  Math.round((NATIONAL_INDEX - NATIONAL_SERIES[NATIONAL_SERIES.length - 13].index) * 10) /
+  Math.round((NATIONAL_INDEX - NATIONAL_SERIES[NATIONAL_SERIES.length - 13]!.index) * 10) /
   10;
 
 export type Anomaly = {
