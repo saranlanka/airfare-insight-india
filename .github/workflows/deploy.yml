@@ -1,9 +1,10 @@
-name: Deploy React App to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
 
@@ -29,13 +30,49 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Find build output
+        run: |
+          echo "===== ROOT ====="
+          ls -la
+          echo "===== DIRECTORIES ====="
+          find . -maxdepth 3 -type d | sort
+          echo "===== HTML FILES ====="
+          find . -type f -name "*.html" | sort
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
+      - name: Prepare Pages
+        run: |
+          if [ -d ".output/public" ]; then
+            echo "Using .output/public"
+            mkdir -p pages
+            cp -r .output/public/* pages/
+          elif [ -d "dist" ]; then
+            echo "Using dist"
+            mkdir -p pages
+            cp -r dist/* pages/
+          else
+            echo "ERROR: No static build directory found"
+            exit 1
+          fi
 
-      - name: Deploy
+          touch pages/.nojekyll
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
